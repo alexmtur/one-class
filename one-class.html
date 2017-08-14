@@ -87,10 +87,11 @@
             }
             _visibleChanged(newValue, oldValue) {
                 if(newValue === undefined) return;
-                if(oldValue === undefined && !newValue) this.hide();
+                if(oldValue === undefined && !newValue) this.style.display = "none";
                 else if(newValue) {
                     if(this.overlapAnimation) this.style.position = "absolute";
-                    this.show();
+                    //Pass an argument for the type of display?
+                    this.style.display = "initial";
                     if(this.entryAnimation)
                         this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
                 }
@@ -101,16 +102,18 @@
                         this.animationController.onfinish = () => {this.style.display = "none";};
                     }
                     else {
-                        this.hide();
+                        this.style.display = "none";
                     }
                 }
             }
             show() {
-                //Pass an argument for the type of display
-                this.style.display = "block";
+                this.visible = true;
             }
             hide() {
-                this.style.display = "none";
+                this.visible = false;
+            }
+            toggle() {
+                this.visible = !this.visible;
             }
         }
         customElements.define(OneClass.is, OneClass);
