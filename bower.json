@@ -1,0 +1,22 @@
+{
+  "name": "one-class",
+  "homepage": "https://github.com/alexmtur/one-clas",
+  "authors": [
+    "Alex Martin <alexmartinturrillas@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#latest",
+    "web-animations-js": "^2.3.1"
+  },
+  "devDependencies": {}
+}

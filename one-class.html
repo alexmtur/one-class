@@ -1,0 +1,62 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../web-animations-js/web-animations.min.html">
+
+<dom-module id="one-navbar-item">
+    <script>
+        class OneClass extends Polymer.Element {
+            static get is() { return "one-class"; }
+            static get properties() {
+                return {
+                    animations: {
+                        'fade-in':  
+                        [
+                            {opacity: 0},
+                            {opacity: 1}
+                        ],
+                        'fade-out':  
+                        [
+                            {opacity: 1},
+                            {opacity: 0}
+                        ],
+
+                    },
+                    visible: {
+                        type: Boolean,
+                        value: false,
+                        reflectToAttribute: true,
+                        notify: true,
+                        observer: '_visibleChanged'
+                    },
+                    entryAnimation: {
+                        type: String,
+                        value: 'fade-in'
+                    },
+                    exitAnimation: {
+                        type: String,
+                        value: 'fade-out'
+                    },
+                    //entryKeyframes, exitKeyframes for more customization
+                };
+            }
+            _visibleChanged(newValue, oldValue) {
+                if(newValue && this.entryAnimation) {
+                    this.show();
+                    this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
+                }
+                else if(!newValue  && this.exitAnimation) {
+                    this.animationController = this.animate(this.animations[this.exitAnimation], {duration: 300, easing: 'ease-in-out'});
+                    this.animationController.onfinish = this.hide;
+                }
+
+            }
+            show() {
+                //Pass an argument for the type of display
+                this.style.display = "block";
+            }
+            hide() {
+                this.style.display = "none";
+            }
+        }
+        customElements.define(OneClass.is, OneClass);
+    </script>
+</dom-module>
