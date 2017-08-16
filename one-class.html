@@ -2,6 +2,13 @@
 <link rel="import" href="../web-animations-js/web-animations.min.html">
 
 <dom-module id="one-navbar-item">
+    <template>
+        <style>
+        :host{
+            display: flex;
+        }
+        </style>
+    </template>
     <script>
         class OneClass extends Polymer.Element {
             static get is() { return "one-class"; }
@@ -42,6 +49,14 @@
                                 {transform: 'translate3d(100%, 0, 0)'},
                                 {transform: 'none'}
                             ],
+                            'slide-in-up': [
+                                {transform: 'translate3d(0, 100%, 0)'},
+                                {transform: 'none'}
+                            ],
+                            'slide-in-down': [
+                                {transform: 'translate3d(0, -100%, 0)'},
+                                {transform: 'none'}
+                            ],
                             'slide-out-left': [
                                 {transform: 'none'},
                                 {transform: 'translate3d(-100%, 0, 0)'}
@@ -49,6 +64,14 @@
                             'slide-out-right': [
                                 {transform: 'none'},
                                 {transform: 'translate3d(100%, 0, 0)'}
+                            ],
+                            'slide-out-up': [
+                                {transform: 'none'},
+                                {transform: 'translate3d(0, -100%, 0)'}
+                            ],
+                            'slide-out-down': [
+                                {transform: 'none'},
+                                {transform: 'translate3d(0, 100%, 0)'}
                             ],
                             'expand': [
                                 {transform: 'scale(0)'}, //, maxHeight: "0"
@@ -60,14 +83,26 @@
                                 {transform: 'scale(0)'} //, maxHeight: "100px"
                             ],
                             'vertical-expand': [
-                                {height: '0', maxHeight: '0'}, //, maxHeight: "0"
-                                {height: 'auto', maxHeight: '1000px'} //, maxHeight: "100px"
+                                {transform: 'scaleY(0)'}, //, maxHeight: "0"
+                                {transform: 'none'} //, maxHeight: "100px"
+                            ],
+                            'vertical-shrink': [
+                                {transform: 'none'}, //, maxHeight: "0"
+                                {transform: 'scaleY(0)'} //, maxHeight: "100px"
+                            ],
+                            'horizontal-expand': [
+                                {transform: 'scaleX(0)'}, //, maxHeight: "0"
+                                {transform: 'none'} //, maxHeight: "100px"
+                            ],
+                            'horizontal-shrink': [
+                                {transform: 'none'}, //, maxHeight: "0"
+                                {transform: 'scaleX(0)'} //, maxHeight: "100px"
                             ],
                         }
                     },
                     visible: {
                         type: Boolean,
-                        value: false,
+                        value: true,
                         reflectToAttribute: true,
                         notify: true,
                         observer: '_visibleChanged'
@@ -81,25 +116,41 @@
                     overlapAnimation: {
                         type: Boolean,
                         value: false
+                    },
+                    initialDisplay: {
+                        type: String,
+                        value: 'initial'
                     }
                     //entryKeyframes, exitKeyframes for more customization
                 };
             }
             _visibleChanged(newValue, oldValue) {
                 if(newValue === undefined) return;
-                if(oldValue === undefined && !newValue) this.style.display = "none";
+                else if(oldValue === undefined && newValue) {
+                    this.initialDisplay = this.style.display;
+                }
+                else if(oldValue === undefined && !newValue) {
+                    this.initialDisplay = this.style.display;
+                    this.style.display = "none";
+                } 
                 else if(newValue) {
-                    if(this.overlapAnimation) this.style.position = "absolute";
-                    //Pass an argument for the type of display?
-                    this.style.display = "initial";
-                    if(this.entryAnimation)
-                        this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
+                    //Pass an argument for the type of display? Or maybe save it on hide
+                    // console.log('display: ' + this.style.display);
+                    this.style.display = this.initialDisplay;
+                    if(this.entryAnimation) {
+                        if(this.overlapAnimation) this.style.position = "absolute";
+                        this.animationController = this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
+                        this.animationController.onfinish = () => {
+                            if(this.overlapAnimation) this.style.position = "initial";
+                        };
+                    }
                 }
                 else if(!newValue) {
                     if(this.exitAnimation){
                         if(this.overlapAnimation) this.style.position = "absolute";
                         this.animationController = this.animate(this.animations[this.exitAnimation], {duration: 300, easing: 'ease-in-out'});
                         this.animationController.onfinish = () => {this.style.display = "none";};
+                        if(this.overlapAnimation) this.style.position = "absolute";
                     }
                     else {
                         this.style.display = "none";
