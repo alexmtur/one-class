@@ -11,7 +11,74 @@
     </template>
     <script>
         class OneClass extends Polymer.Element {
-            static get is() { return "one-class"; }
+            constructor() {
+                super();
+                this.props = this.constructor.properties;      
+            }
+            connectedCallback() {
+                super.connectedCallback();
+            }
+            read() {    
+                try {
+                    firestore.doc(this.document).onSnapshot((doc) => {
+                        let fields = doc.data();
+                        Object.keys(fields).forEach((key) => {
+                            let value = fields[key];
+                            if(value && this.props.hasOwnProperty(key) && this.props[key].global && value !== this[key]) {
+                                this.set(key, value);
+                            }
+                        });
+                    });
+                } catch (error) {console.log(error);}
+            }
+            write() {
+                //Listen to updates from local variables
+                Object.keys(this.props).forEach((key) => {
+                    if(!this.props[key].global) return;
+                   
+                    //Function for two way data binding
+                    this[key + 'Changed'] = (newValue, oldValue) => {
+                        if(newValue === undefined || !this.document) return;
+                        let field = {};
+                        field[key] = newValue;
+                        firestore.doc(this.document).update(field);
+                    };
+                    this._createPropertyObserver(key, (key + 'Changed'), true);
+                });
+            }
+            updateField(property) {
+                if(property && this.props[property].global && this.document) {
+                    let field = {};
+                    field[property] = newValue;
+                    firestore.doc(this.document).update(field);
+                }
+            }
+            updateDocument() {
+                let fields = {};
+                Object.keys(this.props).forEach((key) => {
+                    if(!this.props[key].global) return;
+                    fields[key] = this[key];
+                });
+                if(fields && this.document) firestore.doc(this.document).update(fields);
+            }
+            static get is() {
+                let name = this.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+                return name;
+            }
+            _pathChanged(newValue, oldValue) {
+                //this.updateSync();
+            }
+            _documentChanged(newValue, oldValue) {
+                if(newValue) this.read();
+            }
+            _collectionChanged(newValue, oldValue) {
+                //this.updateSync();
+            }
+
+            _dataChanged(newValue) {
+                console.log(newValue)
+                //this.updateSync();
+            }
             static get properties() {
                 return {
                     animations: {
@@ -120,7 +187,19 @@
                     initialDisplay: {
                         type: String,
                         value: 'initial'
-                    }
+                    },
+                    path: { //Path to property in firebase. E.g.: users/id/property
+                        type: String,
+                        observer: '_pathChanged'
+                    },
+                    document: { //Path to document in firestore. E.g.: users/Alex
+                        type: String,
+                        observer: '_documentChanged'
+                    },
+                    collection: { //Path to collection in firestore. E.g.: users
+                        type: String,
+                        observer: '_collectionChanged'
+                    },
                     //entryKeyframes, exitKeyframes for more customization
                 };
             }
