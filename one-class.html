@@ -1,6 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../web-animations-js/web-animations.min.html">
 
+
 <dom-module id="one-navbar-item">
     <template>
         <style>
@@ -10,6 +11,15 @@
         </style>
     </template>
     <script>
+        /*
+        use mixins at document level to cascade down scopes
+        turn down the shadow dom
+        import css stylesheet
+        create all the styles in the OneClass with ${variables} that can be created at the global scope, and changed in realtime easily
+
+        to-do: id, offline, offline-first, online-first, online
+
+        */
         class OneClass extends Polymer.Element {
             constructor() {
                 super();
@@ -49,7 +59,7 @@
             updateField(property) {
                 if(property && this.props[property].global && this.document) {
                     let field = {};
-                    field[property] = newValue;
+                    field[property] = this[property];
                     firestore.doc(this.document).update(field);
                 }
             }
