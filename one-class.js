@@ -1,4 +1,5 @@
-import {PolymerElement} from "./node_modules/@polymer/polymer/polymer-element.js";
+// import {PolymerElement} from "@polymer/polymer/polymer-element.js";
+import {LitElement} from "@polymer/lit-element";
 
 export class OneClass extends PolymerElement {
     constructor() {
