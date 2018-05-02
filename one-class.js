@@ -1,11 +1,38 @@
-// import {PolymerElement} from "@polymer/polymer/polymer-element.js";
-import {LitElement} from "@polymer/lit-element";
+import {PropertiesMixin} from '@polymer/polymer/lib/mixins/properties-mixin.js';
+import {render} from 'lit-html/lib/shady-render.js';
+export {html} from 'lit-html/lib/lit-extended.js';
 
-export class OneClass extends PolymerElement {
+export class OneClass extends PropertiesMixin(HTMLElement) {
     constructor() {
         super();
         this.props = this.constructor.properties;      
     }
+    //Render implementation start-------------
+    ready() {
+        this._root = this._createRoot();
+        super.ready();
+        //this._firstRendered();
+    }
+    _createRoot() {
+        //override to create in light dom
+        return this.attachShadow({mode : 'open'});
+    }
+    _propertiesChanged(props, changedProps, prevProps) {
+        super._propertiesChanged(props, changedProps, prevProps);
+        const result = this._render(props);
+        if (result && this._root !== undefined) {
+            this._applyRender(result, this._root);
+        }
+    }
+    _render(_props) {
+        throw new Error('render() not implemented in OneClass');
+    }
+    _applyRender(result, node) {
+        //I could even concatenate styles and make transforms
+        render(result, node, this.localName);
+    }
+    //Render implementation end--------------
+
     connectedCallback() {
         super.connectedCallback();
     }
