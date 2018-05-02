@@ -11,6 +11,7 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
     ready() {
         this._root = this._createRoot();
         super.ready();
+        this._applyRender(this._render(), this._root);
         //this._firstRendered();
     }
     _createRoot() {
