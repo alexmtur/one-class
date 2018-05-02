@@ -1,69 +1,78 @@
-<!-- Execute: polymer serve --open -->
-
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-<script src="bower_components/webcomponentsjs/webcomponents-loader.js"></script>
-
-
-<link rel="import"  href="one-page.html">
-<!-- <link rel="import" href="/bower_components/one-link/one-link.html"> -->
-
-<!-- To set global defaults -->
-<custom-style>
-  <style>
-    html {
-      --my-theme-color: #9C27B0;
-    }
-  </style>
-</custom-style>
-
-<style is="custom-style">
-  :host > * {
-
-  } 
-</style>
+<html><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <link href="https://fonts.googleapis.com/css?family=Lato:300" rel="stylesheet">
+  <title>lit-element demo</title>
 </head>
 <body>
+    <style>
+    body {
+         font: 100% "Lato", sans-serif;
+         font-weight: 300 !important;
+         color: #333;
+         background-color: white;
+         margin: 0 !important;
+         line-height: 1.5;
+         min-height: 100vh; 
 
-<one-link href="patatita" style="background: black; padding: 5px;">Link to home</one-link>
+         --one-color: yellow;
+     }
+    </style>
+    <button onclick="myFunction()">Change color</button>
+    <script type="text/javascript">
 
-<!-- Home Page -->
-<one-page active-url="/home" index="1" default>
-  <div height="3000px" style="background: blue;">
-    Lorem Ipsum es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha sido el texto de relleno estándar de las industrias desde el año 1500, cuando un impresor (N. del T. persona que se dedica a la imprenta) desconocido usó una galería de textos y los mezcló de tal manera que logró hacer un libro de textos especimen. No sólo sobrevivió 500 años, sino que tambien ingresó como texto de relleno en documentos electrónicos, quedando esencialmente igual al original. Fue popularizado en los 60s con la creación de las hojas "Letraset", las cuales contenian pasajes de Lorem Ipsum, y más recientemente con software de autoedición, como por ejemplo Aldus PageMaker, el cual incluye versiones de Lorem Ipsum.
-  </div>
-</one-page>
+        //Instead of this we could use it to retrieve color config from the user
+        const star = document.querySelector('body');
+        star.style.setProperty('--one-color', 'orange');
+        console.log(star);
+        function myFunction() {
+            const star = document.querySelector('body');
+            star.style.setProperty('--one-color', 'fuchsia');
+        }
+    </script>
+  <script type="module">
+    // import { LitElement, html } from './node_modules/@polymer/lit-element/lit-element.js';
+    import {OneClass, html} from "./one-class.js"
+    import {PolymerElement} from "./node_modules/@polymer/polymer/polymer-element.js"
+    import {oneStyle} from "./node_modules/@alexmtur/one-style/one-style.js"
+    //import 
 
-<!-- Other Page -->
-<one-page active-url="patatita" index="1">
-  <div height="3000px" style="background: pink;">
-    Lorem Ipsum es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha sido el texto de relleno estándar de las industrias desde el año 1500, cuando un impresor (N. del T. persona que se dedica a la imprenta) desconocido usó una galería de textos y los mezcló de tal manera que logró hacer un libro de textos especimen. No sólo sobrevivió 500 años, sino que tambien ingresó como texto de relleno en documentos electrónicos, quedando esencialmente igual al original. Fue popularizado en los 60s con la creación de las hojas "Letraset", las cuales contenian pasajes de Lorem Ipsum, y más recientemente con software de autoedición, como por ejemplo Aldus PageMaker, el cual incluye versiones de Lorem Ipsum.
-  </div>
-</one-page>
+    class MyElement extends OneClass {
+      static get properties() {
+        return {
+          foo: String,
+          color: String,
+        }
+      }
 
-<dom-bind>
-  <!-- Hybrid code must keep the is="dom-bind" for backwards
-       compatibility. For 2.0-only projects, use a plain template. -->
-  <template is="dom-bind">
-    <h1>Choose color 1</h1>
-    <input type="color" value="color1::input">
+      constructor() {
+        super();
+        this.color = 'pink';
+      }
 
-    <h1>Choose color 2</h1>
-    <input type="color" value="color2::input">
-
-    <h1>Save mix</h1>
-    <button on-click="saveMix">Save it!</button>
-  </template>
-</dom-bind>
-  
-
-  
-</body>
-</html>
-
+      updateColor() {
+        console.log('Color Updated!');
+        this.color = 'gold';
+      }
+      _render() {
+        // console.log(this.whales);
+        return html`
+        ${oneStyle}
+          <style> 
+        h1 { background: ${this.color}; }
+        </style>
+         <h1 class="info"> Some Name ${this.foo} and color: ${this.color}</h1>
+        <button  on-click=${(e) => this.updateColor(e)}>Change Color</button>  
+        `;
+      }
+    }
+    customElements.define('my-element', MyElement);
+  </script>
+  <my-element bar="5" whales="5">Element 1</my-element>
+  <my-element bar="5" whales="5">Element 2</my-element>
+  <my-element bar="5" whales="5">Element 3</my-element>
+</body></html>
 
 
 
