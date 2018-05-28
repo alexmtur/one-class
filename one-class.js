@@ -1,18 +1,55 @@
 import {PropertiesMixin} from '@polymer/polymer/lib/mixins/properties-mixin.js';
 import {render} from 'lit-html/lib/shady-render.js';
 export {html} from 'lit-html/lib/lit-extended.js';
+import {LitElement} from '@polymer/lit-element';
+//import {PolymerElement} from '@polymer/polymer';
+//rethink data flow, do I want attributes and props in sync?
 
 export class OneClass extends PropertiesMixin(HTMLElement) {
+//export class OneClass extends PolymerElement {
+//export class OneClass extends HTMLElement {
+    static get properties() {return {
+        animations: Object,
+        visible: Boolean,
+        entryAnimation: String,
+        exitAnimation: String,
+        overlapAnimation: Boolean,
+        initialDisplay: String,
+        path: String,
+        document: String,
+        collection: String,
+        //entryKeyframes, exitKeyframes for more customization
+        };
+    }
+  //   set visible (visible) {
+  //       this.visible = visible;
+  //   //console.log('visible changed: ' + visible);
+  // }
     constructor() {
         super();
-        this.props = this.constructor.properties;      
+        this.props = this.constructor.properties; 
+        this.visible = true;
+        this.other = true;
+        //this.initialDisplay = this.style.display;
+        //this.visible = false;
+
+        //Init Properties:
+        this.setupAnimations();
+
+    }
+    _firstRendered() {
+        //console.log(this.visible)
+        if(!this.visible) this.style.display = "none";
+        //console.log(this.foo)
+
     }
     //Render implementation start-------------
+    
     ready() {
         this._root = this._createRoot();
         super.ready();
         this._applyRender(this._render(), this._root);
-        //this._firstRendered();
+        this._firstRendered();
     }
     _createRoot() {
         //override to create in light dom
@@ -32,11 +69,12 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         //I could even concatenate styles and make transforms
         render(result, node, this.localName);
     }
+    
     //Render implementation end--------------
 
-    connectedCallback() {
-        super.connectedCallback();
-    }
+    // connectedCallback() {
+    //     super.connectedCallback();
+    // }
     read() {    
         try {
             firestore.doc(this.document).onSnapshot((doc) => {
@@ -98,132 +136,10 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         console.log(newValue)
         //this.updateSync();
     }
-    static get properties() {
-        return {
-            animations: {
-                type: Object,
-                value: {
-                    'fade-in': [
-                        {opacity: 0},
-                        {opacity: 1}
-                    ],
-                    'fade-in-left': [
-                        {opacity: 0, transform: 'translate3d(-100%, 0, 0)'},
-                        {opacity: 1, transform: 'none'}
-                    ],
-                    'fade-in-right': [
-                        {opacity: 0, transform: 'translate3d(100%, 0, 0)'},
-                        {opacity: 1, transform: 'none'}
-                    ],
-                    'fade-out': [
-                        {opacity: 1},
-                        {opacity: 0}
-                    ],
-                    'fade-out-left': [
-                        {opacity: 0, transform: 'none'},
-                        {opacity: 1, transform: 'translate3d(-100%, 0, 0)'}
-                    ],
-                    'fade-out-right': [
-                        {opacity: 0, transform: 'none'},
-                        {opacity: 1, transform: 'translate3d(100%, 0, 0)'}
-                    ],
-                    'slide-in-left': [
-                        {transform: 'translate3d(-100%, 0, 0)'},
-                        {transform: 'none'}
-                    ],
-                    'slide-in-right': [
-                        {transform: 'translate3d(100%, 0, 0)'},
-                        {transform: 'none'}
-                    ],
-                    'slide-in-up': [
-                        {transform: 'translate3d(0, 100%, 0)'},
-                        {transform: 'none'}
-                    ],
-                    'slide-in-down': [
-                        {transform: 'translate3d(0, -100%, 0)'},
-                        {transform: 'none'}
-                    ],
-                    'slide-out-left': [
-                        {transform: 'none'},
-                        {transform: 'translate3d(-100%, 0, 0)'}
-                    ],
-                    'slide-out-right': [
-                        {transform: 'none'},
-                        {transform: 'translate3d(100%, 0, 0)'}
-                    ],
-                    'slide-out-up': [
-                        {transform: 'none'},
-                        {transform: 'translate3d(0, -100%, 0)'}
-                    ],
-                    'slide-out-down': [
-                        {transform: 'none'},
-                        {transform: 'translate3d(0, 100%, 0)'}
-                    ],
-                    'expand': [
-                        {transform: 'scale(0)'}, //, maxHeight: "0"
-                        {transform: 'scale(1.3)'},
-                        {transform: 'scale(1)'} //, maxHeight: "100px"
-                    ],
-                    'shrink': [
-                        {transform: 'scale(1)'}, //, maxHeight: "0"
-                        {transform: 'scale(0)'} //, maxHeight: "100px"
-                    ],
-                    'vertical-expand': [
-                        {transform: 'scaleY(0)'}, //, maxHeight: "0"
-                        {transform: 'none'} //, maxHeight: "100px"
-                    ],
-                    'vertical-shrink': [
-                        {transform: 'none'}, //, maxHeight: "0"
-                        {transform: 'scaleY(0)'} //, maxHeight: "100px"
-                    ],
-                    'horizontal-expand': [
-                        {transform: 'scaleX(0)'}, //, maxHeight: "0"
-                        {transform: 'none'} //, maxHeight: "100px"
-                    ],
-                    'horizontal-shrink': [
-                        {transform: 'none'}, //, maxHeight: "0"
-                        {transform: 'scaleX(0)'} //, maxHeight: "100px"
-                    ],
-                }
-            },
-            visible: {
-                type: Boolean,
-                value: true,
-                reflectToAttribute: true,
-                notify: true,
-                observer: '_visibleChanged'
-            },
-            entryAnimation: {
-                type: String
-            },
-            exitAnimation: {
-                type: String
-            },
-            overlapAnimation: {
-                type: Boolean,
-                value: false
-            },
-            initialDisplay: {
-                type: String,
-                value: 'initial'
-            },
-            path: { //Path to property in firebase. E.g.: users/id/property
-                type: String,
-                observer: '_pathChanged'
-            },
-            document: { //Path to document in firestore. E.g.: users/Alex
-                type: String,
-                observer: '_documentChanged'
-            },
-            collection: { //Path to collection in firestore. E.g.: users
-                type: String,
-                observer: '_collectionChanged'
-            },
-            //entryKeyframes, exitKeyframes for more customization
-        };
-    }
+    
   
     _visibleChanged(newValue, oldValue) {
+        //console.log('chanfe')
         if(newValue === undefined) return;
         else if(oldValue === undefined && newValue) {
             this.initialDisplay = this.style.display;
@@ -233,8 +149,7 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
             this.style.display = "none";
         } 
         else if(newValue) {
-            //Pass an argument for the type of display? Or maybe save it on hide
-            // console.log('display: ' + this.style.display);
+            
             this.style.display = this.initialDisplay;
             if(this.entryAnimation) {
                 if(this.overlapAnimation) this.style.position = "absolute";
@@ -257,13 +172,123 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         }
     }
     show() {
+        //Pass an argument for the type of display? Or maybe save it on hide
+        // console.log('display: ' + this.style.display);
         this.visible = true;
+        this.style.display = this.initialDisplay;
+        if(this.entryAnimation) {
+            if(this.overlapAnimation) this.style.position = "absolute";
+            this.animationController = this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
+            this.animationController.onfinish = () => {
+                if(this.overlapAnimation) this.style.position = "initial";
+            };
+        }
     }
     hide() {
+        // console.log(this.visible)
+        // this.visible = true;
         this.visible = false;
+        if(this.exitAnimation){
+            if(this.overlapAnimation) this.style.position = "absolute";
+            this.animationController = this.animate(this.animations[this.exitAnimation], {duration: 300, easing: 'ease-in-out'});
+            this.animationController.onfinish = () => {this.style.display = "none";};
+            if(this.overlapAnimation) this.style.position = "absolute";
+        }
+        else {
+            this.style.display = "none";
+        }
+        // console.log(this.visible)
+        // this._visibleChanged(false, true);
     }
     toggle() {
         this.visible = !this.visible;
+    }
+    setupAnimations() {
+        this.animations = {
+            'fade-in': [
+                {opacity: 0},
+                {opacity: 1}
+            ],
+            'fade-in-left': [
+                {opacity: 0, transform: 'translate3d(-100%, 0, 0)'},
+                {opacity: 1, transform: 'none'}
+            ],
+            'fade-in-right': [
+                {opacity: 0, transform: 'translate3d(100%, 0, 0)'},
+                {opacity: 1, transform: 'none'}
+            ],
+            'fade-out': [
+                {opacity: 1},
+                {opacity: 0}
+            ],
+            'fade-out-left': [
+                {opacity: 0, transform: 'none'},
+                {opacity: 1, transform: 'translate3d(-100%, 0, 0)'}
+            ],
+            'fade-out-right': [
+                {opacity: 0, transform: 'none'},
+                {opacity: 1, transform: 'translate3d(100%, 0, 0)'}
+            ],
+            'slide-in-left': [
+                {transform: 'translate3d(-100%, 0, 0)'},
+                {transform: 'none'}
+            ],
+            'slide-in-right': [
+                {transform: 'translate3d(100%, 0, 0)'},
+                {transform: 'none'}
+            ],
+            'slide-in-up': [
+                {transform: 'translate3d(0, 100%, 0)'},
+                {transform: 'none'}
+            ],
+            'slide-in-down': [
+                {transform: 'translate3d(0, -100%, 0)'},
+                {transform: 'none'}
+            ],
+            'slide-out-left': [
+                {transform: 'none'},
+                {transform: 'translate3d(-100%, 0, 0)'}
+            ],
+            'slide-out-right': [
+                {transform: 'none'},
+                {transform: 'translate3d(100%, 0, 0)'}
+            ],
+            'slide-out-up': [
+                {transform: 'none'},
+                {transform: 'translate3d(0, -100%, 0)'}
+            ],
+            'slide-out-down': [
+                {transform: 'none'},
+                {transform: 'translate3d(0, 100%, 0)'}
+            ],
+            'expand': [
+                {transform: 'scale(0)'}, //, maxHeight: "0"
+                {transform: 'scale(1.3)'},
+                {transform: 'scale(1)'} //, maxHeight: "100px"
+            ],
+            'shrink': [
+                {transform: 'scale(1)'}, //, maxHeight: "0"
+                {transform: 'scale(0)'} //, maxHeight: "100px"
+            ],
+            'vertical-expand': [
+                {transform: 'scaleY(0)'}, //, maxHeight: "0"
+                {transform: 'none'} //, maxHeight: "100px"
+            ],
+            'vertical-shrink': [
+                {transform: 'none'}, //, maxHeight: "0"
+                {transform: 'scaleY(0)'} //, maxHeight: "100px"
+            ],
+            'horizontal-expand': [
+                {transform: 'scaleX(0)'}, //, maxHeight: "0"
+                {transform: 'none'} //, maxHeight: "100px"
+            ],
+            'horizontal-shrink': [
+                {transform: 'none'}, //, maxHeight: "0"
+                {transform: 'scaleX(0)'} //, maxHeight: "100px"
+            ],
+        };
+        this.overlapAnimation = false;
+        this.initialDisplay = 'initial';
     }
 }
 var init = (ClassName) => {customElements.define(ClassName.is, ClassName);};

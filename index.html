@@ -36,24 +36,46 @@
     import {OneClass, html} from "./one-class.js"
     import {PolymerElement} from "./node_modules/@polymer/polymer/polymer-element.js"
     import {oneStyle} from "./node_modules/@alexmtur/one-style/one-style.js"
+    import {LitElement} from '@polymer/lit-element';
     //import 
+
+    //Add test of hide(), show(), Firebase and one-page. maybe even login would be cool
 
     class MyElement extends OneClass {
       static get properties() {
         return {
-          foo: String,
-          color: String,
+          foo: {type: String, value: 'akex', observer: '_changed1'},
+          color: {type: String, value: 'akex', observer: '_changed'},
+          bar: String
         }
       }
+      _changed(newvar, oldvar) {
+        console.log('hello');
+      }
+    //   _propertiesChanged(props, changedProps, prevProps) {
+    //     super._propertiesChanged(props, changedProps, prevProps);
+    //     console.log('changed props');
+    //     console.log(changedProps);
+    // }
+    
 
       constructor() {
         super();
+        this.foo = 'Peter';
         this.color = 'pink';
+        this.entryAnimation = 'expand';
+        this.exitAnimation = 'expand';
+        window.addEventListener('build', function (e) { 
+console.log(decodeURI(location.pathname + location.search))}, false);
+        //this.visible = true;
+
       }
 
       updateColor() {
         console.log('Color Updated!');
         this.color = 'gold';
+        this.show();
+        window.dispatchEvent(new CustomEvent('build', { detail: this.path }));
       }
       _render() {
         // console.log(this.whales);
@@ -64,12 +86,14 @@
         </style>
          <h1 class="info"> Some Name ${this.foo} and color: ${this.color}</h1>
         <button  on-click=${(e) => this.updateColor(e)}>Change Color</button>  
+        <button  on-click=${(e) => {this.hide();}}>Close</button> 
+        <h1>Hey ${this.bar}</h1>
         `;
       }
     }
     customElements.define('my-element', MyElement);
   </script>
-  <my-element bar="5" whales="5">Element 1</my-element>
+  <my-element foo="Pedro" bar="5" whales="5" id="alice">Element 1</my-element>
   <my-element bar="5" whales="5">Element 2</my-element>
   <my-element bar="5" whales="5">Element 3</my-element>
 </body></html>
