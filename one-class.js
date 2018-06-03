@@ -2,15 +2,14 @@ import {PropertiesMixin} from '@polymer/polymer/lib/mixins/properties-mixin.js';
 import {render} from 'lit-html/lib/shady-render.js';
 export {html} from 'lit-html/lib/lit-extended.js';
 import {LitElement} from '@polymer/lit-element';
+//import * as animations from 'web-animations-js/web-animations-next.min'; //add polyfill for safari
 //import {PolymerElement} from '@polymer/polymer';
 //rethink data flow, do I want attributes and props in sync?
 
 export class OneClass extends PropertiesMixin(HTMLElement) {
-//export class OneClass extends PolymerElement {
-//export class OneClass extends HTMLElement {
     static get properties() {return {
         animations: Object,
-        visible: Boolean,
+        visible: Boolean, //private variable, use show and hide
         entryAnimation: String,
         exitAnimation: String,
         overlapAnimation: Boolean,
@@ -18,33 +17,49 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         path: String,
         document: String,
         collection: String,
-        //entryKeyframes, exitKeyframes for more customization
+        activeUrl: String,
         };
     }
-  //   set visible (visible) {
-  //       this.visible = visible;
-  //   //console.log('visible changed: ' + visible);
-  // }
-    constructor() {
+    constructor() {//properties do not take value until first rendered, unless we define them in the constructor
         super();
         this.props = this.constructor.properties; 
         this.visible = true;
-        this.other = true;
-        //this.initialDisplay = this.style.display;
-        //this.visible = false;
+        this.setupAnimations();      
+    }
+    //Show or hide depending on the path
+    isActive() {
+        let path = decodeURI(location.pathname + location.search);
+        if(!path) return false;
 
-        //Init Properties:
-        this.setupAnimations();
+        //Absolute URL
+        else if(path[0] === '/') {
+            //Matches exactly
+            if(this.exact) {
+                if(path === this.activeUrl) return true;
+            } 
+            //Matches the beginnig (not exact)
+            else if(path.startsWith(this.activeUrl)) return true;
+            else return false;
+        }
 
+        //Relative URL
+        else if(this.index > -1) {
+            path = path.split('/')[this.index];
+            if(path === this.activeUrl) return true;
+        }
+        return false;
     }
     _firstRendered() {
-        //console.log(this.visible)
+        if(this.activeUrl) {
+            if(!this.isActive()) this.visible = false;
+            window.addEventListener('pathChange',  (e) => { 
+                if(this.isActive()) this.show();
+                else this.hide();
+            }, false);
+        }
         if(!this.visible) this.style.display = "none";
-        //console.log(this.foo)
-
     }
-    //Render implementation start-------------
-    
+    //Render implementation start-------------   
     ready() {
         this._root = this._createRoot();
         super.ready();
@@ -69,12 +84,8 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         //I could even concatenate styles and make transforms
         render(result, node, this.localName);
     }
-    
     //Render implementation end--------------
 
-    // connectedCallback() {
-    //     super.connectedCallback();
-    // }
     read() {    
         try {
             firestore.doc(this.document).onSnapshot((doc) => {
@@ -131,13 +142,10 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
     _collectionChanged(newValue, oldValue) {
         //this.updateSync();
     }
-
     _dataChanged(newValue) {
         console.log(newValue)
         //this.updateSync();
-    }
-    
-  
+    }  
     _visibleChanged(newValue, oldValue) {
         //console.log('chanfe')
         if(newValue === undefined) return;
@@ -171,9 +179,8 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
             }
         }
     }
-    show() {
-        //Pass an argument for the type of display? Or maybe save it on hide
-        // console.log('display: ' + this.style.display);
+    show() {//Pass an argument for the type of display? Or maybe save it on hide. console.log('display: ' + this.style.display);
+        if(this.visible) return;
         this.visible = true;
         this.style.display = this.initialDisplay;
         if(this.entryAnimation) {
@@ -184,9 +191,8 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
             };
         }
     }
-    hide() {
-        // console.log(this.visible)
-        // this.visible = true;
+    hide() { //the transform effects only work with 'absolute' position. For some reason in chrome animations have to be run twice to work.
+        if(this.visible === false) return;
         this.visible = false;
         if(this.exitAnimation){
             if(this.overlapAnimation) this.style.position = "absolute";
@@ -197,95 +203,34 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         else {
             this.style.display = "none";
         }
-        // console.log(this.visible)
-        // this._visibleChanged(false, true);
     }
     toggle() {
-        this.visible = !this.visible;
+        if(this.visible) this.hide();
+        else if(this.visible === false) this.show();
+        //this.visible = !this.visible;
     }
     setupAnimations() {
         this.animations = {
-            'fade-in': [
-                {opacity: 0},
-                {opacity: 1}
-            ],
-            'fade-in-left': [
-                {opacity: 0, transform: 'translate3d(-100%, 0, 0)'},
-                {opacity: 1, transform: 'none'}
-            ],
-            'fade-in-right': [
-                {opacity: 0, transform: 'translate3d(100%, 0, 0)'},
-                {opacity: 1, transform: 'none'}
-            ],
-            'fade-out': [
-                {opacity: 1},
-                {opacity: 0}
-            ],
-            'fade-out-left': [
-                {opacity: 0, transform: 'none'},
-                {opacity: 1, transform: 'translate3d(-100%, 0, 0)'}
-            ],
-            'fade-out-right': [
-                {opacity: 0, transform: 'none'},
-                {opacity: 1, transform: 'translate3d(100%, 0, 0)'}
-            ],
-            'slide-in-left': [
-                {transform: 'translate3d(-100%, 0, 0)'},
-                {transform: 'none'}
-            ],
-            'slide-in-right': [
-                {transform: 'translate3d(100%, 0, 0)'},
-                {transform: 'none'}
-            ],
-            'slide-in-up': [
-                {transform: 'translate3d(0, 100%, 0)'},
-                {transform: 'none'}
-            ],
-            'slide-in-down': [
-                {transform: 'translate3d(0, -100%, 0)'},
-                {transform: 'none'}
-            ],
-            'slide-out-left': [
-                {transform: 'none'},
-                {transform: 'translate3d(-100%, 0, 0)'}
-            ],
-            'slide-out-right': [
-                {transform: 'none'},
-                {transform: 'translate3d(100%, 0, 0)'}
-            ],
-            'slide-out-up': [
-                {transform: 'none'},
-                {transform: 'translate3d(0, -100%, 0)'}
-            ],
-            'slide-out-down': [
-                {transform: 'none'},
-                {transform: 'translate3d(0, 100%, 0)'}
-            ],
-            'expand': [
-                {transform: 'scale(0)'}, //, maxHeight: "0"
-                {transform: 'scale(1.3)'},
-                {transform: 'scale(1)'} //, maxHeight: "100px"
-            ],
-            'shrink': [
-                {transform: 'scale(1)'}, //, maxHeight: "0"
-                {transform: 'scale(0)'} //, maxHeight: "100px"
-            ],
-            'vertical-expand': [
-                {transform: 'scaleY(0)'}, //, maxHeight: "0"
-                {transform: 'none'} //, maxHeight: "100px"
-            ],
-            'vertical-shrink': [
-                {transform: 'none'}, //, maxHeight: "0"
-                {transform: 'scaleY(0)'} //, maxHeight: "100px"
-            ],
-            'horizontal-expand': [
-                {transform: 'scaleX(0)'}, //, maxHeight: "0"
-                {transform: 'none'} //, maxHeight: "100px"
-            ],
-            'horizontal-shrink': [
-                {transform: 'none'}, //, maxHeight: "0"
-                {transform: 'scaleX(0)'} //, maxHeight: "100px"
-            ],
+            'fade-in': {opacity: [0, 1], transform: 'none'},
+            'fade-in-left': {opacity: [0,1], transform: ['translate3d(-100%, 0, 0)', 'none']},
+            'fade-in-right': {opacity: [0,1], transform: ['translate3d(100%, 0, 0)', 'none']},
+            'fade-out': {opacity: [1, 0], transform: 'none'},
+            'fade-out-left': {opacity: [1,0], transform: ['translate3d(-100%, 0, 0)', 'none']},
+            'fade-out-right': {opacity: [1,0], transform: ['translate3d(100%, 0, 0)', 'none']},
+            'slide-in-left': {transform: ['translate3d(-100%, 0, 0)', 'none']},
+            'slide-in-right': {transform: ['translate3d(100%, 0, 0)', 'none']},
+            'slide-in-up': {transform: ['translate3d(0, 100%, 0)', 'none']},
+            'slide-in-down': {transform: ['translate3d(0, -100%, 0)', 'none']},
+            'slide-out-left': {transform: ['none', 'translate3d(-100%, 0, 0)']},
+            'slide-out-right': {transform: ['none', 'translate3d(100%, 0, 0)']},
+            'slide-out-up': {transform: ['none', 'translate3d(0, -100%, 0)']},
+            'slide-out-down': {transform: ['none', 'translate3d(0, 100%, 0)']},
+            'expand': {transform: ['scale(0)', 'scale(1.3)', 'scale(1)']},
+            'shrink': {transform: ['scale(1)', 'scale(0)']},
+            'vertical-expand': {transform: ['scaleY(0)', 'none']},
+            'vertical-shrink': {transform: ['none', 'scaleY(0)']},
+            'horizontal-expand': {transform: ['scaleX(0)', 'none']},
+            'horizontal-shrink': {transform: ['none', 'scaleX(0)']}
         };
         this.overlapAnimation = false;
         this.initialDisplay = 'initial';

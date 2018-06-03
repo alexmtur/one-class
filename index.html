@@ -3,6 +3,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <link href="https://fonts.googleapis.com/css?family=Lato:300" rel="stylesheet">
+  <!-- <script src="./node_modules/web-animations-js/web-animations.min.js"></script> -->
   <title>lit-element demo</title>
 </head>
 <body>
@@ -46,7 +47,9 @@
         return {
           foo: {type: String, value: 'akex', observer: '_changed1'},
           color: {type: String, value: 'akex', observer: '_changed'},
-          bar: String
+          bar: String,
+          //activeUrl: String,
+          //act: String
         }
       }
       _changed(newvar, oldvar) {
@@ -63,8 +66,8 @@
         super();
         this.foo = 'Peter';
         this.color = 'pink';
-        this.entryAnimation = 'expand';
-        this.exitAnimation = 'expand';
+        this.entryAnimation = 'horizontal-expand';
+        this.exitAnimation = 'fade-out';
         window.addEventListener('build', function (e) { 
 console.log(decodeURI(location.pathname + location.search))}, false);
         //this.visible = true;
@@ -75,7 +78,31 @@ console.log(decodeURI(location.pathname + location.search))}, false);
         console.log('Color Updated!');
         this.color = 'gold';
         this.show();
-        window.dispatchEvent(new CustomEvent('build', { detail: this.path }));
+        //window.dispatchEvent(new CustomEvent('build', { detail: this.path }));
+        // this.animate([
+        //         {opacity: 1},
+        //         {opacity: 0}
+        //     ], {duration: 300, easing: 'ease-in-out'});
+        //var elem = this.getElementById('pulse');
+        // console.log(this);
+        // var animation = this.animate({
+        //   opacity: [1, 0, 1, 0],
+        //   //transform: ['scale(0.5)', 'scale(1)'],
+        // }, {
+        //   easing: 'ease-in-out',
+        //   direction: 'alternate',
+        //   duration: 5000,
+        //   //iterations: Infinity,
+        // });
+        //let animation = this.animate({opacity: [1, 0, 1, 0]}, {duration: 3000, easing: 'ease-in-out'});
+        let animation = this.animate({
+  opacity: [0.5, 1],
+  transform: ['scale(0.5)', 'scale(1)'],
+}, {
+  direction: 'alternate',
+  duration: 500,
+  //iterations: Infinity,
+});
       }
       _render() {
         // console.log(this.whales);
@@ -88,6 +115,9 @@ console.log(decodeURI(location.pathname + location.search))}, false);
         <button  on-click=${(e) => this.updateColor(e)}>Change Color</button>  
         <button  on-click=${(e) => {this.hide();}}>Close</button> 
         <h1>Hey ${this.bar}</h1>
+        <div id="pulse" style="width: 150px;">
+          Hello world!
+        </div>
         `;
       }
     }
@@ -95,7 +125,7 @@ console.log(decodeURI(location.pathname + location.search))}, false);
   </script>
   <my-element foo="Pedro" bar="5" whales="5" id="alice">Element 1</my-element>
   <my-element bar="5" whales="5">Element 2</my-element>
-  <my-element bar="5" whales="5">Element 3</my-element>
+  <my-element bar="5" whales="5" activeUrl="/home">Element 3</my-element>
 </body></html>
 
 
