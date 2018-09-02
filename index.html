@@ -3,9 +3,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <link href="https://fonts.googleapis.com/css?family=Lato:300" rel="stylesheet">
-  <!-- <script src="./node_modules/web-animations-js/web-animations.min.js"></script> -->
   <title>lit-element demo</title>
+  <!-- Initialize Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-firestore.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyAXxEyIhqPhdDO50-qy3q6YMuB4azrYHLw",
+      authDomain: "one-login-24376.firebaseapp.com",
+      databaseURL: "https://one-login-24376.firebaseio.com",
+      projectId: "one-login-24376",
+      storageBucket: "one-login-24376.appspot.com",
+      messagingSenderId: "1092455581800"
+    };
+    firebase.initializeApp(config);
+  // Initialize Cloud Firestore through Firebase
+  var firestore = firebase.firestore();
+  </script>
 </head>
+
 <body>
     <style>
     body {
@@ -32,100 +49,120 @@
             star.style.setProperty('--one-color', 'fuchsia');
         }
     </script>
+    
   <script type="module">
     // import { LitElement, html } from './node_modules/@polymer/lit-element/lit-element.js';
-    import {OneClass, html} from "./one-class.js"
+    import {OneClass, OneLink, html} from "./one-class.js"
     import {PolymerElement} from "./node_modules/@polymer/polymer/polymer-element.js"
     import {oneStyle} from "./node_modules/@alexmtur/one-style/one-style.js"
     import {LitElement} from '@polymer/lit-element';
     //import 
 
     //Add test of hide(), show(), Firebase and one-page. maybe even login would be cool
-
-    class MyElement extends OneClass {
+    class ColorInput extends OneClass {
       static get properties() {
         return {
-          foo: {type: String, value: 'akex', observer: '_changed1'},
-          color: {type: String, value: 'akex', observer: '_changed'},
-          bar: String,
-          //activeUrl: String,
-          //act: String
+          color: {type: String, value: 'red', public:true},
+          auxVisible: {type: Boolean, value: true, public:true},
         }
       }
-      _changed(newvar, oldvar) {
-        console.log('hello');
-      }
-    //   _propertiesChanged(props, changedProps, prevProps) {
-    //     super._propertiesChanged(props, changedProps, prevProps);
-    //     console.log('changed props');
-    //     console.log(changedProps);
-    // }
-    
-
       constructor() {
         super();
-        this.foo = 'Peter';
-        this.color = 'pink';
         this.entryAnimation = 'horizontal-expand';
         this.exitAnimation = 'fade-out';
-        window.addEventListener('build', function (e) { 
-console.log(decodeURI(location.pathname + location.search))}, false);
-        //this.visible = true;
-
-      }
-
-      updateColor() {
-        console.log('Color Updated!');
-        this.color = 'gold';
-        this.show();
-        //window.dispatchEvent(new CustomEvent('build', { detail: this.path }));
-        // this.animate([
-        //         {opacity: 1},
-        //         {opacity: 0}
-        //     ], {duration: 300, easing: 'ease-in-out'});
-        //var elem = this.getElementById('pulse');
-        // console.log(this);
-        // var animation = this.animate({
-        //   opacity: [1, 0, 1, 0],
-        //   //transform: ['scale(0.5)', 'scale(1)'],
-        // }, {
-        //   easing: 'ease-in-out',
-        //   direction: 'alternate',
-        //   duration: 5000,
-        //   //iterations: Infinity,
-        // });
-        //let animation = this.animate({opacity: [1, 0, 1, 0]}, {duration: 3000, easing: 'ease-in-out'});
-        let animation = this.animate({
-  opacity: [0.5, 1],
-  transform: ['scale(0.5)', 'scale(1)'],
-}, {
-  direction: 'alternate',
-  duration: 500,
-  //iterations: Infinity,
-});
+        this.auxVisible = true;
       }
       _render() {
-        // console.log(this.whales);
         return html`
         ${oneStyle}
-          <style> 
-        h1 { background: ${this.color}; }
-        </style>
-         <h1 class="info"> Some Name ${this.foo} and color: ${this.color}</h1>
-        <button  on-click=${(e) => this.updateColor(e)}>Change Color</button>  
-        <button  on-click=${(e) => {this.hide();}}>Close</button> 
-        <h1>Hey ${this.bar}</h1>
-        <div id="pulse" style="width: 150px;">
-          Hello world!
-        </div>
+         <input type="text" on-change=${(e) => {this.color = e.target.value;}} > 
+        <input type="checkbox" checked=${this.auxVisible} on-change=${(e) => {this.auxVisible = e.target.checked;}}>
         `;
       }
     }
-    customElements.define('my-element', MyElement);
+    customElements.define('color-input', ColorInput);
+
+     class ColorDisplay extends OneClass {
+      static get properties() {
+        return {
+          color: {type: String, value: 'red', public:true},
+          visible: {type: Boolean, public:true},
+        }
+      }
+      constructor() {
+        super();
+        this.entryAnimation = 'horizontal-expand';
+        this.exitAnimation = 'fade-out';
+      }
+      saveColor() {
+        this.updateStorage();
+        console.log('here')
+      }
+      _render() {
+        return html`
+        ${oneStyle}
+        <h2>This is the color</h2>
+        <div style="width:100px;height: 50px;background:${this.color}">${this.color}</div>
+        <button  on-click=${(e) => {this.hide();}}>Close</button> 
+        <button  on-click=${(e) => this.saveColor(e)}>Save Color</button> 
+        `;
+      }
+    }
+    customElements.define('color-display', ColorDisplay);
+
+    class ColorApp extends OneClass {
+      static get properties() {
+        return {
+          color: {type: String, value: 'red', public:true},
+        }
+      }
+      constructor() {
+        super();
+        this.color = 'blue';
+        this.auxVisible = true;
+        this.entryAnimation = 'horizontal-expand';
+        this.exitAnimation = 'fade-out';
+      }
+      _render() {
+        return html`
+        ${oneStyle}
+        <color-input id="color-input" on-color-changed=${(e) => {this.color = e.detail.value;}} auxVisible$=${this.auxVisible} on-auxVisible-changed=${(e) => {
+          this.auxVisible = e.detail.value;
+          if(this.auxVisible) this.id('color-display').show();
+          else this.id('color-display').hide();
+          }}></color-input>
+
+        <color-display id="color-display" onlinePath=${this.onlinePath} localPath=${this.localPath} color=${this.color} on-visible-changed=${(e) => {
+            //this.auxVisible = e.detail.value; //not changing it
+            this.id('color-input').auxVisible = e.detail.value; 
+          }
+          }
+          visible=${this.auxVisible}></color-display>
+        `;
+      }
+    }
+    customElements.define('color-app', ColorApp);
   </script>
-  <my-element foo="Pedro" bar="5" whales="5" id="alice">Element 1</my-element>
-  <my-element bar="5" whales="5">Element 2</my-element>
-  <my-element bar="5" whales="5" activeUrl="/home">Element 3</my-element>
+  <div style="width: 100%;display: flex; align-items: center; justify-content: center; background: #f1f1f1; flex-direction: column;">
+    <div style="padding: 10px; border: 2px solid black;">
+      <h3>Purpose of the test: </h3>
+        <ul>
+          <li>Use of routing (click "Test with xxx storage")</li>
+          <li>One-way data flow of elements</li>
+          <li>Change event on properties</li>
+          <li>Entry and close animations</li>
+          <li>Display and hide element</li>
+          <li>Online and local storage</li>
+          <li>Shared styles and changing values for all shared styles</li>
+        </ul>
+    </div>
+    <div style="width: 100%; display: flex; justify-content: space-around;">
+      <one-link href="/online"> Test with online storage </one-link>
+      <one-link href="/local"> Test with local storage </one-link>
+    </div>
+    <color-app activeUrl="/online" onlinePath="colors/color1"></color-app>
+    <color-app activeUrl="/local" localPath="colors/color2"></color-app>
+  </div>
 </body></html>
 
 

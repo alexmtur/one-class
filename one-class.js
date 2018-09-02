@@ -1,5 +1,6 @@
 import {PropertiesMixin} from '@polymer/polymer/lib/mixins/properties-mixin.js';
 import {render} from 'lit-html/lib/shady-render.js';
+import {html} from 'lit-html/lib/lit-extended.js';
 export {html} from 'lit-html/lib/lit-extended.js';
 import {LitElement} from '@polymer/lit-element';
 //import * as animations from 'web-animations-js/web-animations-next.min'; //add polyfill for safari
@@ -15,19 +16,33 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         overlapAnimation: Boolean,
         initialDisplay: String,
         path: String,
-        document: String,
+        //document: String, //descoped, use online-path
         collection: String,
         activeUrl: String,
+        onlinePath: String, //stores public variables in global storage. maybe with the document variable global is redundant.
+        //TO-DO: implement local and session storage
+        localPath: String, //stores public variables in local storage
+        sessionPath: String, //stores public variables in session storage
+        //maybe add a sync changes to transfer attribute changes to external db?
         };
     }
     constructor() {//properties do not take value until first rendered, unless we define them in the constructor
         super();
         this.props = this.constructor.properties; 
+        this.publicProps = [];
+        Object.keys(this.props).forEach((key) => {
+            if(!this.props[key].public) return;
+            this.publicProps.push(key);
+        });
+        //console.log(this.props);
+        // console.log(this.publicProps);
+        // console.log(this.foo);
+        //to-do: define public private variables
         this.visible = true;
         this.setupAnimations();      
     }
-    //Show or hide depending on the path
-    isActive() {
+    // Routing implementation start-----------------------------
+    isActive() { //Show or hide depending on the path
         let path = decodeURI(location.pathname + location.search);
         if(!path) return false;
 
@@ -49,16 +64,7 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         }
         return false;
     }
-    _firstRendered() {
-        if(this.activeUrl) {
-            if(!this.isActive()) this.visible = false;
-            window.addEventListener('pathChange',  (e) => { 
-                if(this.isActive()) this.show();
-                else this.hide();
-            }, false);
-        }
-        if(!this.visible) this.style.display = "none";
-    }
+    // Routing implementation end-----------------------------
     //Render implementation start-------------   
     ready() {
         this._root = this._createRoot();
@@ -71,10 +77,33 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         return this.attachShadow({mode : 'open'});
     }
     _propertiesChanged(props, changedProps, prevProps) {
+        //required for re-render
         super._propertiesChanged(props, changedProps, prevProps);
         const result = this._render(props);
         if (result && this._root !== undefined) {
             this._applyRender(result, this._root);
+        }
+
+        //fire on-prop-changed event for public properties
+        if(!this.props) return;
+        Object.keys(changedProps).forEach((key) => {
+            if(!this.props[key] || !this.props[key].public) return;
+            let eventName = key + '-changed';
+            this.dispatchEvent(new CustomEvent(eventName, {detail: {value: changedProps[key]}})); // to make it window scope, bubbles true and composed true
+        });
+        //Handle path change
+        if(changedProps['onlinePath']) {
+            this.read();
+        };
+        if(changedProps['localPath']) {
+            //Init Local storage
+            let value;
+            Object.keys(this.props).forEach((key) => {
+                if(!this.props[key].public) return;
+                value = localStorage.getItem(this.localPath + key);
+                if(value !== null && value !== undefined) this[key] = value;
+            });
+            this.read();
         }
     }
     _render(_props) {
@@ -84,100 +113,117 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         //I could even concatenate styles and make transforms
         render(result, node, this.localName);
     }
+    _firstRendered() {
+        if(this.activeUrl) {
+            if(!this.isActive()) this.visible = false;
+            window.addEventListener('pathChange',  (e) => { 
+                if(this.isActive()) this.show();
+                else this.hide();
+            }, false);
+        }
+        if(!this.visible) this.style.display = "none";
+    }
     //Render implementation end--------------
 
-    read() {    
+    //Firebase implementation start--------------------------------- 
+    read() { //Sync firebase changes to properties  
         try {
-            firestore.doc(this.document).onSnapshot((doc) => {
-                let fields = doc.data();
-                Object.keys(fields).forEach((key) => {
-                    let value = fields[key];
-                    if(value && this.props.hasOwnProperty(key) && this.props[key].global && value !== this[key]) {
-                        this.set(key, value);
-                    }
+            if(this.onlinePath) {
+                console.log(this.onlinePath)
+                firestore.doc(this.onlinePath).onSnapshot((doc) => {
+                    let fields = doc.data();
+                    if(!fields) return;
+                    Object.keys(fields).forEach((key) => {
+                        let value = fields[key];
+                        if(value && this.props.hasOwnProperty(key) && this.props[key].public && value !== this[key]) {
+                            this[key] = value;
+                        }
+                    });
                 });
-            });
+            } else if(this.localPath) {
+                let eventName = 'localPath-' + this.localPath;
+                console.log(eventName)
+                this.addEventListener(eventName, this.handleLocalStorageUpdate);
+            }
+
         } catch (error) {console.log(error);}
     }
-    write() {
-        //Listen to updates from local variables
-        Object.keys(this.props).forEach((key) => {
-            if(!this.props[key].global) return;
-           
-            //Function for two way data binding
-            this[key + 'Changed'] = (newValue, oldValue) => {
-                if(newValue === undefined || !this.document) return;
-                let field = {};
-                field[key] = newValue;
-                firestore.doc(this.document).update(field);
-            };
-            this._createPropertyObserver(key, (key + 'Changed'), true);
-        });
+    handleLocalStorageUpdate(e) {
+        console.log(e.detail.value);
+        let property = e.detail.value;
+        if(!property) return;
+        let itemPath = this.localPath + property;
+        this[property] = localStorage.getItem(itemPath);
     }
-    updateField(property) {
-        if(property && this.props[property].global && this.document) {
-            let field = {};
-            field[property] = newValue;
-            firestore.doc(this.document).update(field);
+    updateStorage(property) {//maybe it can make obsolete updateonline/localstorage
+        //If a property is defined, updates only that property. Otherwise it updates the entire document
+        if(this.onlinePath) {
+            let fields = {};
+            if(property && this.props[property].public) {
+                fields[property] = this[property];
+            }
+            else {            
+                Object.keys(this.props).forEach((key) => {
+                    if(!this.props[key].public) return;
+                    fields[key] = this[key];
+                });
+            }
+            firestore.doc(this.onlinePath).set(fields, {merge: true});
+            //firestore.doc(this.onlinePath).update(fields);
+            console.log('here');
+        }
+        if(this.localPath) {
+           if(!this.localPath) return; 
+            let updatedProps = this.props;
+            if(property) updatedProps = {property: this[property]};
+            let eventName = 'localPath-' + this.localPath;
+            let itemPath = '';
+            Object.keys(updatedProps).forEach((key) => {
+                if(!this.props[key].public) return;
+                itemPath = this.localPath + key;
+                localStorage.setItem(itemPath, this[key]);
+                this.dispatchEvent(new CustomEvent(eventName, {detail: {value: key}, bubbles: true, composed: true}));
+            }); 
         }
     }
-    updateDocument() {
-        let fields = {};
-        Object.keys(this.props).forEach((key) => {
-            if(!this.props[key].global) return;
-            fields[key] = this[key];
-        });
-        if(fields && this.document) firestore.doc(this.document).update(fields);
+    updateOnlineStorage(property) { //use this method to update component external databases (firabase, localstorage)
+        //If a property is defined, updates only that property. Otherwise it updates the entire document
+        if(!this.onlinePath) return; let fields = {};
+        if(property && this.props[property].public) {
+            fields[property] = this[property];
+        }
+        else {            
+            Object.keys(this.props).forEach((key) => {
+                if(!this.props[key].public) return;
+                fields[key] = this[key];
+            });
+        }
+        firestore.doc(this.onlinePath).set(fields, {merge: true});
+        //firestore.doc(this.onlinePath).update(fields);
     }
+    updateLocalStorage(property) {
+        //If a property is defined, updates only that property. Otherwise it updates the entire document
+        if(!this.localPath) return; 
+        let updatedProps = this.props;
+        if(property) updatedProps = {property: this[property]};
+        let eventName = 'localPath-' + this.localPath;
+        let itemPath = '';
+        Object.keys(updatedProps).forEach((key) => {
+            if(!this.props[key].public) return;
+            itemPath = this.localPath + key;
+            localStorage.setItem(itemPath, this[key]);
+            this.dispatchEvent(new CustomEvent(eventName, {detail: {value: key}, bubbles: true, composed: true}));
+        });
+    }    
+    //Firebase implementation end--------------------------------- 
     static get is() {
         let name = this.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
         return name;
     }
-    _pathChanged(newValue, oldValue) {
-        //this.updateSync();
-    }
-    _documentChanged(newValue, oldValue) {
-        if(newValue) this.read();
-    }
-    _collectionChanged(newValue, oldValue) {
-        //this.updateSync();
-    }
-    _dataChanged(newValue) {
-        console.log(newValue)
-        //this.updateSync();
-    }  
-    _visibleChanged(newValue, oldValue) {
-        //console.log('chanfe')
-        if(newValue === undefined) return;
-        else if(oldValue === undefined && newValue) {
-            this.initialDisplay = this.style.display;
-        }
-        else if(oldValue === undefined && !newValue) {
-            this.initialDisplay = this.style.display;
-            this.style.display = "none";
-        } 
-        else if(newValue) {
-            
-            this.style.display = this.initialDisplay;
-            if(this.entryAnimation) {
-                if(this.overlapAnimation) this.style.position = "absolute";
-                this.animationController = this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
-                this.animationController.onfinish = () => {
-                    if(this.overlapAnimation) this.style.position = "initial";
-                };
-            }
-        }
-        else if(!newValue) {
-            if(this.exitAnimation){
-                if(this.overlapAnimation) this.style.position = "absolute";
-                this.animationController = this.animate(this.animations[this.exitAnimation], {duration: 300, easing: 'ease-in-out'});
-                this.animationController.onfinish = () => {this.style.display = "none";};
-                if(this.overlapAnimation) this.style.position = "absolute";
-            }
-            else {
-                this.style.display = "none";
-            }
-        }
+    id(elementId) { //get element by id. (equivalent of the Polymer $ function)
+        //this.shadowRoot.getElementById('draw') //only accounts for shadow. this._root does both shady and shadow
+        let id = '#' + elementId;
+        return this._root.querySelector(id);
     }
     show() {//Pass an argument for the type of display? Or maybe save it on hide. console.log('display: ' + this.style.display);
         if(this.visible) return;
@@ -239,3 +285,82 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
 var init = (ClassName) => {customElements.define(ClassName.is, ClassName);};
 init(OneClass);
 //customElements.define(OneClass.is, OneClass);
+
+export class OneLink extends OneClass {
+    static get properties() {return {
+            href: String, //href property for the anchor            
+            active: Boolean, //Becomes active when the current url matches the href property            
+            exact: Boolean, //If true, the url has to be exactly equal to href, otherwise it checks they begin the same               
+        };
+    }
+    constructor() {
+        super();
+        this.active = false;
+    }
+    _firstRendered() {
+        if(this.href) {
+            this.isActive();
+            window.addEventListener('pathChange',  (e) => { 
+                this.isActive();
+                console.log(this.active);
+            }, false);
+            window.onpopstate = (e) => {
+                this.isActive();
+            };
+
+            this.addEventListener('click', async (e) => {
+                e.preventDefault(); 
+                if(this.active) return;
+                window.history.pushState(null, null, this.href); //data, title, url
+                window.dispatchEvent(new CustomEvent('pathChange', { detail: this.href }));
+            });
+        }
+    }
+    _render() {return html`
+        <style>
+            .anchor {
+                background: var(--one-background, #333);
+                /*color: rgba(255,255,255,.5);*/
+                color: white;
+                text-decoration: inherit;
+                opacity: 0.8;
+                /*.ease(.3s);*/
+            }
+            .anchor[active=true] {
+                /*color: green;*/
+                /*background: pink !important;*/
+                /*opacity: 1;*/
+                color:white;
+                opacity: 1;
+            }
+            a:hover, .anchor:hover {
+                color: rgba(255,255,255,.8);
+            }
+            a:active {
+                color: white;
+            }
+        </style>
+        <a class="anchor" href="${this.href}" active$="${this.active}">
+            <slot></slot>
+        </a>`
+    }
+    
+    //Executed when the url changes
+    isActive() {
+        let path = decodeURI(location.pathname + location.search);
+        if(!path) return;
+        if(!this.exact) {
+            path = path.substring(0, this.href.length);
+        }
+        //Check if the current url matches the href property
+        if(this.href === path) {
+            if(this.active) return;
+            else this.active = true;
+        }
+        else {
+            if(this.active) this.active = false;
+            else return;
+        }
+    }
+}
+customElements.define('one-link', OneLink);
