@@ -105,6 +105,7 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
             });
             this.read();
         }
+        //If useful trigger show and hide on visible change
     }
     _render(_props) {
         throw new Error('render() not implemented in OneClass');
@@ -224,6 +225,23 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         //this.shadowRoot.getElementById('draw') //only accounts for shadow. this._root does both shady and shadow
         let id = '#' + elementId;
         return this._root.querySelector(id);
+    }
+    userId() {
+        return firebase.auth().currentUser.uid;
+    }
+    getOnline(path) {
+        firestore.doc(path).get().then((doc) => {
+            if (doc.exists) {return doc.data();} 
+            else {console.log("No such document!"); return undefined;}
+        }).catch((error) => {
+            console.log("Error getting document:", error);
+            return undefined;
+        });
+    }
+    setOnline(path, data) {
+        firestore.doc(path).set(data)
+        .then(() => {console.log("Document successfully written!");})
+        .catch((error) => {console.error("Error writing document: ", error);});  
     }
     show() {//Pass an argument for the type of display? Or maybe save it on hide. console.log('display: ' + this.style.display);
         if(this.visible) return;
