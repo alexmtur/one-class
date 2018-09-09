@@ -15,10 +15,12 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         exitAnimation: String,
         overlapAnimation: Boolean,
         initialDisplay: String,
-        path: String,
+        //path: String,
         //document: String, //descoped, use online-path
-        collection: String,
-        activeUrl: String,
+        //collection: String,
+        activeUrl: String, //the url for the element to be active
+        index: Number, //position that needs to match the relative url
+        dataIndex: Number, //position to extract data from the url and store in this.urlData
         onlinePath: String, //stores public variables in global storage. maybe with the document variable global is redundant.
         //TO-DO: implement local and session storage
         localPath: String, //stores public variables in local storage
@@ -45,6 +47,7 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
     isActive() { //Show or hide depending on the path
         let path = decodeURI(location.pathname + location.search);
         if(!path) return false;
+        this.urlData = path.split('/')[this.dataIndex];
 
         //Absolute URL
         else if(path[0] === '/') {
