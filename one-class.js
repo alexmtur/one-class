@@ -21,6 +21,7 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         activeUrl: String, //the url for the element to be active
         index: Number, //position that needs to match the relative url
         dataIndex: Number, //position to extract data from the url and store in this.urlData
+        urlData: Object, //data taken from the url
         onlinePath: String, //stores public variables in global storage. maybe with the document variable global is redundant.
         //TO-DO: implement local and session storage
         localPath: String, //stores public variables in local storage
@@ -219,7 +220,41 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
             localStorage.setItem(itemPath, this[key]);
             this.dispatchEvent(new CustomEvent(eventName, {detail: {value: key}, bubbles: true, composed: true}));
         });
-    }    
+    } 
+    userId() {
+        return firebase.auth().currentUser.uid;
+    }
+    signOut() {
+        firebase.auth().signOut().then(function() {
+          // Sign-out successful.
+        }, (error) => {
+          console.log("Error signing out:", error);
+        });
+    }
+    getOnline(path) {
+        return firestore.doc(path).get().then((doc) => {
+            if (doc.exists) {return doc.data();} 
+            else {console.log("No such document!"); return undefined;}
+        }).catch((error) => {
+            console.log("Error getting document:", error);
+            throw error;
+        });
+    }
+    setOnline(path, data) {
+        firestore.doc(path).set(data)
+        .then(() => {
+            //console.log("Document successfully written!");
+        })
+        .catch((error) => {console.error("Error writing document: ", error);});  
+    }
+    syncFieldOnline(path, field) {
+        firestore.collection("users").doc(this.userId)
+            .onSnapshot((doc) => {
+                if(doc.exists && doc.data()) this[field] = doc.data()[field];
+            }, (error) => {
+                console.log("Error getting snapshot:", error);
+            });
+    }   
     //Firebase implementation end--------------------------------- 
     static get is() {
         let name = this.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
@@ -229,23 +264,6 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         //this.shadowRoot.getElementById('draw') //only accounts for shadow. this._root does both shady and shadow
         let id = '#' + elementId;
         return this._root.querySelector(id);
-    }
-    userId() {
-        return firebase.auth().currentUser.uid;
-    }
-    getOnline(path) {
-        firestore.doc(path).get().then((doc) => {
-            if (doc.exists) {return doc.data();} 
-            else {console.log("No such document!"); return undefined;}
-        }).catch((error) => {
-            console.log("Error getting document:", error);
-            return undefined;
-        });
-    }
-    setOnline(path, data) {
-        firestore.doc(path).set(data)
-        .then(() => {console.log("Document successfully written!");})
-        .catch((error) => {console.error("Error writing document: ", error);});  
     }
     show() {//Pass an argument for the type of display? Or maybe save it on hide. console.log('display: ' + this.style.display);
         if(this.visible) return;
