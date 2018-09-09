@@ -47,10 +47,10 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
     isActive() { //Show or hide depending on the path
         let path = decodeURI(location.pathname + location.search);
         if(!path) return false;
-        this.urlData = path.split('/')[this.dataIndex];
 
         //Absolute URL
         else if(path[0] === '/') {
+            this.urlData = path.split('/')[this.dataIndex];
             //Matches exactly
             if(this.exact) {
                 if(path === this.activeUrl) return true;
@@ -62,6 +62,7 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
 
         //Relative URL
         else if(this.index > -1) {
+            this.urlData = path.split('/')[this.dataIndex];
             path = path.split('/')[this.index];
             if(path === this.activeUrl) return true;
         }
