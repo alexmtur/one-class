@@ -1,8 +1,10 @@
 import {PropertiesMixin} from '@polymer/polymer/lib/mixins/properties-mixin.js';
 import {render} from 'lit-html/lib/shady-render.js';
-import {html} from 'lit-html/lib/lit-extended.js';
-export {html} from 'lit-html/lib/lit-extended.js';
-import {LitElement} from '@polymer/lit-element';
+// import {html} from 'lit-html/lib/lit-extended.js';
+// export {html} from 'lit-html/lib/lit-extended.js';
+import {html} from 'lit-html/lit-html.js';
+export {html} from 'lit-html/lit-html.js';
+//import {LitElement} from '@polymer/lit-element';
 //import * as animations from 'web-animations-js/web-animations-next.min'; //add polyfill for safari
 //import {PolymerElement} from '@polymer/polymer';
 //rethink data flow, do I want attributes and props in sync?
@@ -270,21 +272,31 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         this.visible = true;
         this.style.display = this.initialDisplay;
         if(this.entryAnimation) {
-            if(this.overlapAnimation) this.style.position = "absolute";
-            this.animationController = this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
-            this.animationController.onfinish = () => {
-                if(this.overlapAnimation) this.style.position = "initial";
-            };
+            try {
+                if(this.overlapAnimation) this.style.position = "absolute";
+                this.animationController = this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
+                this.animationController.onfinish = () => {
+                    if(this.overlapAnimation) this.style.position = "initial";
+                };
+            }
+            catch(error) {
+                console.log(error);
+            }
         }
     }
     hide() { //the transform effects only work with 'absolute' position. For some reason in chrome animations have to be run twice to work.
         if(this.visible === false) return;
         this.visible = false;
         if(this.exitAnimation){
-            if(this.overlapAnimation) this.style.position = "absolute";
-            this.animationController = this.animate(this.animations[this.exitAnimation], {duration: 300, easing: 'ease-in-out'});
-            this.animationController.onfinish = () => {this.style.display = "none";};
-            if(this.overlapAnimation) this.style.position = "absolute";
+            try {
+                if(this.overlapAnimation) this.style.position = "absolute";
+                this.animationController = this.animate(this.animations[this.exitAnimation], {duration: 300, easing: 'ease-in-out'});
+                this.animationController.onfinish = () => {this.style.display = "none";};
+                if(this.overlapAnimation) this.style.position = "absolute";
+            }
+            catch(error) {
+                console.log(error);
+            }
         }
         else {
             this.style.display = "none";
@@ -380,7 +392,7 @@ export class OneLink extends OneClass {
                 color: white;
             }
         </style>
-        <a class="anchor" href="${this.href}" active$="${this.active}">
+        <a class="anchor" href="${this.href}" .active="${this.active}">
             <slot></slot>
         </a>`
     }

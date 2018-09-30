@@ -53,9 +53,7 @@
   <script type="module">
     // import { LitElement, html } from './node_modules/@polymer/lit-element/lit-element.js';
     import {OneClass, OneLink, html} from "./one-class.js"
-    import {PolymerElement} from "./node_modules/@polymer/polymer/polymer-element.js"
     import {oneStyle} from "./node_modules/@alexmtur/one-style/one-style.js"
-    import {LitElement} from '@polymer/lit-element';
     //import 
 
     //Add test of hide(), show(), Firebase and one-page. maybe even login would be cool
@@ -75,8 +73,8 @@
       _render() {
         return html`
         ${oneStyle}
-         <input type="text" on-change=${(e) => {this.color = e.target.value;}} > 
-        <input type="checkbox" checked=${this.auxVisible} on-change=${(e) => {this.auxVisible = e.target.checked;}}>
+         <input type="text" @change=${(e) => {this.color = e.target.value;}} > 
+        <input type="checkbox" checked=${this.auxVisible} @change=${(e) => {this.auxVisible = e.target.checked;}}>
         `;
       }
     }
@@ -103,8 +101,8 @@
         ${oneStyle}
         <h2>This is the color</h2>
         <div style="width:100px;height: 50px;background:${this.color}">${this.color}</div>
-        <button  on-click=${(e) => {this.hide();}}>Close</button> 
-        <button  on-click=${(e) => this.saveColor(e)}>Save Color</button> 
+        <button  @click=${(e) => {this.hide();}}>Close</button> 
+        <button  @click=${(e) => this.saveColor(e)}>Save Color</button> 
         `;
       }
     }
@@ -126,18 +124,18 @@
       _render() {
         return html`
         ${oneStyle}
-        <color-input id="color-input" on-color-changed=${(e) => {this.color = e.detail.value;}} auxVisible$=${this.auxVisible} on-auxVisible-changed=${(e) => {
+        <color-input id="color-input" @color-changed=${(e) => {this.color = e.detail.value;}} auxVisible=${this.auxVisible} @auxVisible-changed=${(e) => {
           this.auxVisible = e.detail.value;
           if(this.auxVisible) this.id('color-display').show();
           else this.id('color-display').hide();
           }}></color-input>
 
-        <color-display id="color-display" onlinePath=${this.onlinePath} localPath=${this.localPath} color=${this.color} on-visible-changed=${(e) => {
+        <color-display id="color-display" onlinePath=${this.onlinePath} localPath=${this.localPath} color=${this.color} @visible-changed=${(e) => {
             //this.auxVisible = e.detail.value; //not changing it
             this.id('color-input').auxVisible = e.detail.value; 
           }
           }
-          visible=${this.auxVisible}></color-display>
+          .visible=${this.auxVisible}></color-display>
         `;
       }
     }
