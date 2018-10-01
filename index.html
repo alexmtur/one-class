@@ -35,25 +35,22 @@
          min-height: 100vh; 
 
          --one-color: yellow;
+         --one-background: coral;
      }
     </style>
     <button onclick="myFunction()">Change color</button>
     <script type="text/javascript">
-
         //Instead of this we could use it to retrieve color config from the user
-        const star = document.querySelector('body');
-        star.style.setProperty('--one-color', 'orange');
-        console.log(star);
         function myFunction() {
             const star = document.querySelector('body');
-            star.style.setProperty('--one-color', 'fuchsia');
+            star.style.setProperty('--one-background', 'orange');
         }
     </script>
     
   <script type="module">
     // import { LitElement, html } from './node_modules/@polymer/lit-element/lit-element.js';
-    import {OneClass, OneLink, html} from "./one-class.js"
-    import {oneStyle} from "./node_modules/@alexmtur/one-style/one-style.js"
+    import {OneClass, OneLink, OneBlock, oneStyle, html} from "./one-class.js"
+    // import {oneStyle} from "./node_modules/@alexmtur/one-style/one-style.js"
     //import 
 
     //Add test of hide(), show(), Firebase and one-page. maybe even login would be cool
@@ -140,6 +137,46 @@
       }
     }
     customElements.define('color-app', ColorApp);
+    class BlockApp extends OneClass {
+      static get properties() {
+        return {
+          color: {type: String, value: 'red', public:true},
+        }
+      }
+      constructor() {
+        super();
+        this.color = 'blue';
+        this.auxVisible = true;
+        this.entryAnimation = 'horizontal-expand';
+        this.exitAnimation = 'fade-out';
+      }
+      _render() {
+        return html`
+        ${oneStyle}
+        <style>
+        block1 {
+          width: 100px; height: 300px;
+          background: red;
+        }
+        block2 {
+          width: 300px; height: 300px;
+          background: green;
+        }
+        block3 {
+          width: 300px; height: 100px;
+          background: blue;
+        }
+        </style>
+        joijiopjoiji
+        <one-block align="bottom-space" direction="column">
+          <div class="block1">joip</div>
+          <div class="block2"></div>
+          <div class="block2"></div>
+        </one-block>
+        `;
+      }
+    }
+    customElements.define('block-app', BlockApp);
   </script>
   <div style="width: 100%;display: flex; align-items: center; justify-content: center; background: #f1f1f1; flex-direction: column;">
     <div style="padding: 10px; border: 2px solid black;">
@@ -160,6 +197,7 @@
     </div>
     <color-app activeUrl="/online" onlinePath="colors/color1"></color-app>
     <color-app activeUrl="/local" localPath="colors/color2"></color-app>
+    <block-app></block-app>
   </div>
 </body></html>
 
