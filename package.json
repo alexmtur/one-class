@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "@alexmtur/one-style": "^3.0.2",
+    "@polymer/polymer": "^3.0.5",
+    "lit-html": "github:Polymer/lit-html",
+    "web-animations-js": "^2.3.1"
+  },
+  "name": "@alexmtur/one-class",
+  "version": "3.2.7",
+  "main": "one-class.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexmtur/one-class.git"
+  },
+  "author": "Alex <alexmartinturrillas@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alexmtur/one-class/issues"
+  },
+  "homepage": "https://github.com/alexmtur/one-class#readme",
+  "description": "",
+  "resolutions": {
+    "@polymer/polymer": "3.0.0-pre.13",
+    "@webcomponents/shadycss": "1.2.0-0",
+    "symbol-observable": "1.2.0"
+  }
+}
