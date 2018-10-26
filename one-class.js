@@ -419,12 +419,15 @@ customElements.define('one-link', OneLink);
 
 export class OneBlock extends OneClass {
     static get properties() {return {
-        //Layout Properties
+        //External Layout Properties
         align: {type: String, value: 'top-left'},
         direction: {type: String, value: 'row'},
         weight: {type: Number, value: 0},
         width: {type: String, value: 'auto'},
         height: {type: String,value: 'auto'},
+        //Internal
+        vAlign: String,
+        hAlign: String
     }}
     constructor() {
         super();
@@ -514,7 +517,10 @@ export class OneBlock extends OneClass {
     }
     _firstRendered() {
         super._firstRendered();
-        this.setLayout();       
+        this.setLayout();    
+        console.log('hAlign: ' + this.hAlign);
+        console.log('vAlign: ' + this.vAlign);
+        console.log('direction: ' + this.direction);
     }
     _render() {return html`
         <style>
@@ -525,7 +531,7 @@ export class OneBlock extends OneClass {
                 flex-direction: ${this.direction};
                 flex: ${this.weight};
             }
-        </style>dsfs
+        </style>
         <slot></slot>`
     }
 }

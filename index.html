@@ -154,25 +154,31 @@
         return html`
         ${oneStyle}
         <style>
-        block1 {
-          width: 100px; height: 300px;
+        #mainBlock { 
+          background: gray;
+          width: 270px;
+          height: 120px;
+          position: absolute;
+        }
+        .block1 {
+          width: 30px; height: 90px;
           background: red;
         }
-        block2 {
-          width: 300px; height: 300px;
+        .block2 {
+          width: 90px; height: 30px;
           background: green;
         }
-        block3 {
-          width: 300px; height: 100px;
+        .block3 {
+          width: 90px; height: 90px;
           background: blue;
         }
         </style>
-        joijiopjoiji
-        <one-block align="bottom-space" direction="column">
-          <div class="block1">joip</div>
+        <button @click=${(e) => {this.id('mainBlock').toggle();}}>Show and hide block</button>
+        <one-block id="mainBlock" align="stretch-space" direction="column" entryAnimation="fade-id" exitAnimation="fade-out">
+          <div class="block1"></div>
           <div class="block2"></div>
-          <div class="block2"></div>
-        </one-block>
+          <div class="block3"></div>
+        </one-block>        
         `;
       }
     }
