@@ -67,7 +67,7 @@
         this.exitAnimation = 'fade-out';
         this.auxVisible = true;
       }
-      _render() {
+      render() {
         return html`
         ${oneStyle}
          <input type="text" @change=${(e) => {this.color = e.target.value;}} > 
@@ -93,7 +93,7 @@
         this.updateStorage();
         console.log('here')
       }
-      _render() {
+      render() {
         return html`
         ${oneStyle}
         <h2>This is the color</h2>
@@ -118,7 +118,7 @@
         this.entryAnimation = 'horizontal-expand';
         this.exitAnimation = 'fade-out';
       }
-      _render() {
+      render() {
         return html`
         ${oneStyle}
         <color-input id="color-input" @color-changed=${(e) => {this.color = e.detail.value;}} auxVisible=${this.auxVisible} @auxVisible-changed=${(e) => {
@@ -150,7 +150,7 @@
         this.entryAnimation = 'horizontal-expand';
         this.exitAnimation = 'fade-out';
       }
-      _render() {
+      render() {
         return html`
         ${oneStyle}
         <style>

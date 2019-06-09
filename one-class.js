@@ -1,9 +1,11 @@
-import {PropertiesMixin} from '@polymer/polymer/lib/mixins/properties-mixin.js';
-import {render} from 'lit-html/lib/shady-render.js';
+import {PropertiesMixin} from '@polymer/polymer/lib/mixins/properties-mixin.js'; //Needed for {properties} and automatic sync with attributes. Also neaded for "ready" lifecycle call.
+import {render} from 'lit-html';
+import {html} from 'lit-html';
+export {html} from 'lit-html';
+//import {render} from 'lit-html/lib/shady-render.js';
 // import {html} from 'lit-html/lib/lit-extended.js';
 // export {html} from 'lit-html/lib/lit-extended.js';
-import {html} from 'lit-html/lit-html.js';
-export {html} from 'lit-html/lit-html.js';
+
 //import {LitElement} from '@polymer/lit-element';
 //import * as animations from 'web-animations-js/web-animations-next.min'; //add polyfill for safari
 //import {PolymerElement} from '@polymer/polymer';
@@ -72,21 +74,22 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         return false;
     }
     // Routing implementation end-----------------------------
-    //Render implementation start-------------   
+    //Render implementation start-------------
+    //Inspired by: lit-element/src/lib/updating-element.ts   
     ready() {
         this._root = this._createRoot();
         super.ready();
-        this._applyRender(this._render(), this._root);
-        this._firstRendered();
+        this._applyRender(this.render(), this._root);
+        this.firstUpdated();
     }
-    _createRoot() {
+    _createRoot() { //In Lit-Element = createRenderRoot
         //override to create in light dom
         return this.attachShadow({mode : 'open'});
     }
     _propertiesChanged(props, changedProps, prevProps) {
         //required for re-render
         super._propertiesChanged(props, changedProps, prevProps);
-        const result = this._render(props);
+        const result = this.render(props);
         if (result && this._root !== undefined) {
             this._applyRender(result, this._root);
         }
@@ -114,14 +117,14 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         }
         //If useful trigger show and hide on visible change
     }
-    _render(_props) {
+    render(props) { //in Lit-Element is the update method
         throw new Error('render() not implemented in OneClass');
     }
     _applyRender(result, node) {
         //I could even concatenate styles and make transforms
-        render(result, node, this.localName);
+        render(result, node, {scopeName: this.localName, eventContext: this});
     }
-    _firstRendered() {
+    firstUpdated() {
         if(this.activeUrl) {
             if(!this.isActive()) this.visible = false;
             window.addEventListener('pathChange',  (e) => { 
@@ -271,12 +274,14 @@ export class OneClass extends PropertiesMixin(HTMLElement) {
         if(this.visible) return;
         this.visible = true;
         this.style.display = this.initialDisplay;
+        this.style.position = 'absolute';
         if(this.entryAnimation) {
             try {
                 if(this.overlapAnimation) this.style.position = "absolute";
                 this.animationController = this.animate(this.animations[this.entryAnimation], {duration: 300, easing: 'ease-in-out'});
                 this.animationController.onfinish = () => {
                     if(this.overlapAnimation) this.style.position = "initial";
+                    console.log('here')
                 };
             }
             catch(error) {
@@ -349,7 +354,7 @@ export class OneLink extends OneClass {
         super();
         this.active = false;
     }
-    _firstRendered() {
+    firstUpdated() {
         if(this.href) {
             this.isActive();
             window.addEventListener('pathChange',  (e) => { 
@@ -368,7 +373,7 @@ export class OneLink extends OneClass {
             });
         }
     }
-    _render() {return html`
+    render() {return html`
         <style>
             .anchor {
                 background: var(--one-background, #333);
@@ -515,14 +520,14 @@ export class OneBlock extends OneClass {
         // this.updateStyles({'--one-width': this.width});
         // this.updateStyles({'--one-height': this.height});
     }
-    _firstRendered() {
-        super._firstRendered();
+    firstUpdated() {
+        super.firstUpdated();
         this.setLayout();    
         console.log('hAlign: ' + this.hAlign);
         console.log('vAlign: ' + this.vAlign);
         console.log('direction: ' + this.direction);
     }
-    _render() {return html`
+    render() {return html`
         <style>
             :host {
                 display: flex;
